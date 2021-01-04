@@ -645,7 +645,7 @@
   Switch#show ip helper-address 
   Forward protocol       Interface       Forward server 
   67(active)               Vlan1           192.168.1.1
-  ``` 
+  ```
   
 # 第2章 DHCPv6配置命令
 
@@ -661,7 +661,7 @@
   ```text
   Switch#clear ipv6 dhcp binding
   ```
- 
+
 - 相关命令：`show ipv6 dhcp binding`
 
 ### 2.2 clear ipv6 dhcp conflict
@@ -701,7 +701,7 @@
 
   ```text
   Switch# debug ipv6 dhcp client packet
-  ``` 
+  ```
   
 ### 2.5 debug ipv6 dhcp detail
 
@@ -920,13 +920,880 @@
   
 ### 2.21 prefix-delegation
 
+- 命令：`prefix-delegation <ipv6-prefix/prefix-length> <client-DUID> [iaid <iaid>] [lifetime <valid-time> <preferred-time>] no prefix-delegation <ipv6-prefix/prefix-length> <client-DUID> [iaid <iaid>]`
+- 功能：配置分配给特定前缀请求客户端的代理前缀。本命令的 no 操作删除分配给特定前缀请求客户端的代理前缀
+- 参数：`<ipv6-prefix/prefix-length>` 为分配给特定前缀请求客户端的代理前缀。`<client-DUID>` 为指定前缀请求客户端的 DUID，本文支持 DUID-LLT 类型的 DUID，它是长度为14的字符串， 同时支持 DUID-LL 类型的 DUID。`<iaid>` 是客户端请求报文中 IA_PD 选项中指定的 IAID 值。`<valid-time>` 和 `<preferred-time>` 分别为客户分配 IPv6 前缀的有效生存期和优选生存期，单位为秒，取值范围是 1-31536000，但`<preferred-time>`必须小于`<valid-time>`，如果不配置，默认的值`<valid-time>`为2592000，`<preferred-time>`为604800
+- 命令模式：DHCPv6 地址池配置模式
+- 缺省情况：系统默认没有配置分配给特定前缀请求客户端的代理前缀
+- 使用指南：本命令指定 IPv6 前缀与某个前缀请求客户端静态绑定。如果没有配置IAID则客户端的任何IA都可以获取此前缀。一个地址池最多可以配置8个静态绑定的代理前缀。在前缀代理服务中，静态绑定前缀优先于前缀池被使用
+- 举例：以下命令把 2001:da8::/48 分配给 DUID 为 0001000600000005000BBFAA2408 ，IAID 为12的前缀请求客户端。
 
+  ```text
+  Switch(dhcp-1-config)#prefix-delegation      2001:da8::/48 
+  0001000600000005000BBFAA2408 12
+  ```
+
+### 2.22 prefix-delegation pool
+
+- 命令：`prefix-delegation pool <poolname> [lifetime <valid-time> <preferred-time>] no prefix-delegation pool <poolname>`
+- 功能：配置 DHCPv6 地址池使用的代理前缀池名称。本命令的 no 操作删除 DHCPv6 地址池使用的代理前缀池名称
+- 参数：`<poolname>`为代理前缀池的名称，它是长度小于32的字符串。`<valid-time>` 和`<preferred-time>`分别为从该前缀池分配 IPv6 前缀的有效生存期和优选生存期，单位为秒，取值范围是 1-31536000，但`<preferred-time>`必须不大于`<valid-time>`，如果不配置，默认的值`<valid-time>`为2592000，`<preferred-time>`为604800。参数 infinity 表示生存期为无限值
+- 命令模式：DHCPv6 地址池配置模式。
+- 缺省情况：系统默认没有配置 DHCPv6 地址池使用的代理前缀池名称
+- 使用指南：本命令指定 DHCPv6 地址池使用的代理前缀池名称，服务器提供代理前缀服务时将从该前缀池中分配可用的前缀给客户端。本命令与 ipv6 local pool 命令配合使用。一个地址池最多可以绑定1个代理前缀池。在删除 DHCPv6 地址池使用的代理前缀池名称时，如果地址池已不关联代理前缀池，也没有配置静态绑定代理前缀，则服务器的前缀代理服务将不可用
+- 举例：
+
+  ```text
+  Switch(dhcp-1-config)#prefix-delegation pool abc
+  ```
+  
+### 2.23 service dhcpv6
+
+- 命令：`service dhcpv6 no service dhcpv6`
+- 功能：启动DHCPv6服务器功能；本命令的 no 操作为关闭 DHCPv6 服务
+- 参数：无
+- 缺省情况：DHCPv6 服务缺省是关闭的
+- 命令模式：全局配置模式
+- 使用指南：DHCPv6 服务包括 DHCPv6 服务器功能、DHCPv6 中继的功能和 DHCPv6 前缀代理功能。DHCPv6 服务器功能、DHCPv6 中继功能和 DHCPv6 前缀代理功能配置在接口上。只有打开 DHCPv6 服务器功能，交换机才能在接口上给 DHCPv6 客户机分配 IP 地址、开启 DHCPv6 的 RELAY 功能以及开启 DHCPv6 前缀代理功能
+- 举例：打开 DHCPv6 服务器。
+
+  ```text
+  Switch(config)#service dhcpv6
+  ```
+  
+### 2.24 show ipv6 dhcp
+
+- 命令：`show ipv6 dhcp`
+- 功能：显示交换机 DHCPv6 服务的使能开关以及 DUID
+- 命令模式：特权和配置模式
+- 使用指南：显示交换机 DHCPv6 服务的使能开关以及 DUID，服务器标识符选项只会使用 DUID-LLT 类型的 DUID
+- 举例：
+
+  ```text
+  Switch#show ipv6 dhcp
+  DHCPv6 is enabled 
+  LLT DUID is <00:01:00:01:43:b7:1b:81:00:03:0f:01:5f:9d>
+  LL DUID is <00:03:00:01:00:03:0f:01:5f:9d>
+  ```
+  
+### 2.25 show ipv6 dhcp binding
+
+- 命令：`show ipv6 dhcp binding [<ipv6-address> | pd <ipv6-prefix|prefix-length> | count]`
+- 功能：显示 DHCPv6 所有的地址或前缀绑定信息
+- 参数：`<ipv6-address>`为某指定的 IPv6 地址；count 表示显示 DHCPv6 地址绑定表项数量信息
+- 命令模式：特权和配置模式
+- 使用指南：显示 DHCPv6 所有的地址或前缀绑定信息，包括类型、DUID、IAID、前缀、超时时间等
+- 举例: 
+
+  ```text
+  Switch#show ipv6 dhcp binding 
+  Client: iatype IANA, iaid 0x0e001d92 
+  DUID: 00:01:00:01:0f:55:82:4f:00:19:e0:3f:d1:83 
+  IANA leased address: 2001:da8::10 
+  Preferred lifetime 604800 seconds, valid lifetime 2592000 seconds 
+  Lease obtained at %Jan 01 01:34:44 1970 
+  Lease expires at %Jan 31 01:34:44 1970 (2592000 seconds left) 
+  The number of DHCPv6 bindings is 1
+  ```
+  
+### 2.26 show ipv6 dhcp conflict
+
+- 命令：`show ipv6 dhcp conflict`
+- 功能：显示有冲突记录的地址的日志信息
+- 命令模式：特权和配置模式
+- 举例：
+
+  ```text
+  witch#show ipv6 dhcp conflict
+  ```
+  
+### 2.27 show ipv6 dhcp interface
+
+- 命令：`show ipv6 dhcp interface [<interface-name>]`
+- 功能：显示交换机DHCPv6接口的信息
+- 参数：`<interface-name>` 为交换机接口名称及接口号，如果没有提供`<interface-name>`参数，则系统显示当前所有 DHCPv6 接口的信息。
+- 命令模式：特权和配置模式
+- 使用指南：显示交换机DHCPv6接口的信息，包括接口工作模式（Prefix delegation client、DHCPv6 server、DHCPv6 relay），以及各种模式下的相关配置信息
+- 举例
+
+    ```text
+    Switch#show ipv6 dhcp interface vlan10
+    Vlan10 is in server mode 
+    Using pool: poolv6 
+    Preference value: 20 
+    Rapid-Commit is disabled
+    ```
+
+### 2.28 show ipv6 dhcp pool
+
+- 命令：`show ipv6 dhcp pool [<poolname>]`
+- 功能：显示DHCPv6地址池的信息
+- 参数：`<poolname>`为系统当前已配置 DHCPv6 地址池名称，长度小于32个字符。如果不提供`<poolname>`参数，则系统显示所有 DHCPv6 地址池的信息
+- 命令模式：特权和配置模式
+- 使用指南：显示交换机 DHCPv6 地址池的配置信息以及动态分配信息，包括 DHCPv6 地址池的名称，DHCPv6 地址池的前缀信息，排除地址，DNS server 等配置信息，以及关联的前缀池信息。对于用作地址分配服务器模式的地址池，显示已经分配的地址绑定个数。对于用作前缀代理服务器模式的地址池，显示已分配的前缀个数
+- 举例：
+
+  ```text
+  Switch#show ipv6 dhcp pool poolv6
+  ```
+  
+### 2.29 show ipv6 dhcp statistics
+
+- 命令：`show ipv6 dhcp statistics`
+- 功能：显示 DHCPv6 服务器的对各种 DHCPv6 数据包的统计信息
+- 命令模式：特权和配置模式。
+- 举例：
+
+    ```text
+    Switch#show ipv6 dhcp statistics
+    Address pools               1 
+    Active bindings             0 
+    Expiried bindings           0 
+    Malformed message           0
+    
+    Message Recieved
+    DHCP6SOLICIT                0 
+    DHCP6ADVERTISE              0 
+    DHCP6REQUEST                0 
+    DHCP6REPLY                  0 
+    DHCP6RENEW                  0 
+    DHCP6REBIND                 0
+    DHCP6RELEASE                0 
+    DHCP6DECLINE                0 
+    DHCP6CONFIRM                0 
+    DHCP6RECONFIGURE            0 
+    DHCP6INFORMREQ              0 
+    DHCP6RELAYFORW              0 
+    DHCP6RELAYREPLY             0
+    
+    Message Send
+    DHCP6SOLICIT                0 
+    DHCP6ADVERTISE              0 
+    DHCP6REQUEST                0 
+    DHCP6REPLY                  0 
+    DHCP6RENEW                  0 
+    DHCP6REBIND                 0 
+    DHCP6RELEASE                0 
+    DHCP6DECLINE                0 
+    DHCP6CONFIRM                0 
+    DHCP6RECONFIGURE            0 
+    DHCP6INFORMREQ              0 
+    DHCP6RELAYFORW              0 
+    DHCP6RELAYREPLY             0
+    
+    
+    
+    | 显示信息          | 解释                           |
+    | ----------------- | ------------------------------ |
+    | Address pools     | 配置的DHCPv6地址池个数         |
+    | Active bindings   | 自动分配地址的个数             |
+    | Expiried bindings | 绑定超期的个数                 |
+    | Malformed message | 错误信息的个数；               |
+    | Message Recieved  | 接收DHCPv6数据包的统计         |
+    | DHCP6SOLICIT      | 其中DHCPv6 SOLICIT报文个数     |
+    | DHCP6ADVERTISE    | 其中DHCPv6 ADVERTISE报文个数   |
+    | DHCPv6REQUEST     | 其中DHCPv6 REQUEST报文个数     |
+    | DHCP6REPLY        | 其中DHCPv6 REPLY报文个数       |
+    | DHCP6RENEW        | 其中DHCPv6 RENEW报文个数       |
+    | DHCP6RELEASE      | 其中DHCPv6 RELEASE报文个数     |
+    | DHCP6DECLINE      | 其中DHCPv6 DECLINE报文个数     |
+    | DHCP6CONFIRM      | 其中DHCPv6 CONFIRM报文个数     |
+    | DHCP6RECONFIGURE  | 其中DHCPv6 RECONFIGURE报文个数 |
+    | DHCP6INFORMREQ    | 其中DHCPv6 INFORMREQ报文个数   |
+    | DHCP6RELAYFORW    | 其中DHCPv6 RELAYFORW报文个数   |
+    | Message Send      | 发送DHCPv6数据包的统计         |
+    | DHCP6SOLICIT      | 其中DHCPv6 SOLICIT报文个数     |
+    | DHCP6ADVERTISE    | 其中DHCPv6 ADVERTISE报文个数   |
+    | DHCPv6REQUEST     | 其中DHCPv6 REQUEST报文个数     |
+    | DHCP6REPLY        | 其中DHCPv6 REPLY报文个数       |
+    | DHCP6RENEW        | 其中DHCPv6 RENEW报文个数       |
+    | DHCP6REBIND       | 其中DHCPv6 REBIND报文个数      |
+    | DHCP6RELEASE      | 其中DHCPv6 RELEASE报文个数     |
+    | DHCP6DECLINE      | 其中DHCPv6 DECLINE报文个数     |
+    | DHCP6CONFIRM      | 其中DHCPv6 CONFIRM报文个数     |
+    | DHCP6RECONFIGURE  | 其中DHCPv6 RECONFIGURE报文个数 |
+    | DHCP6INFORMREQ    | 其中DHCPv6 INFORMREQ报文个数   |
+    | DHCP6RELAYFORW    | 其中DHCPv6 RELAYFORW报文个数   |
+    ```
+
+### 2.30 show ipv6 general-prefix
+
+- 命令：`show ipv6 general-prefix`
+- 功能：显示 IPv6 通用前缀池的信息
+- 命令模式：特权和配置模式
+- 使用指南：显示 IPv6 通用前缀池的信息，包括通用前缀池中的前缀数目，每个前缀的名称，获取该前缀的接口，具体的前缀值
+- 举例：
+
+  ```text
+  Switch#show ipv6 general-prefix
+  ```
+  
+### 2.31 show ipv6 local pool
+
+- 命令：`show ipv6 local pool`
+- 功能：显示 DHCPv6 前缀池的信息和统计
+- 命令模式：特权和配置模式
+- 使用指南：显示 DHCPv6 前缀池的信息和统计，包括前缀池的名称，DHCPv6 池中的前缀、前缀长度、分配的前缀长度，可以自由分配前缀的个数，已经分配的前缀的个数和前缀信息
+- 举例：
+
+  ```text
+  Switch#show ipv6 local pool 
+  Pool        Prefix            Free          In use 
+    a         2010::1/0/48      65536            0
+  ```
+  
+## 第3章 DHCP option 82配置命令
+
+### 3.1 debug ip dhcp relay packet
+
+- 命令：`debug ip dhcp relay packet`
+- 功能：使用本命令显示 DHCP 中继代理处理数据包的信息，包括 option 82 选项的添加和剥离动作信息
+- 参数：无
+- 命令模式：特权配置模式使用指南：运行时使用本命令显示中继代理处理中继数据包的过程，并显示相应的 option82 动作信息
+- 举例：配置显示 DHCP 中继代理处理数据包的信息
+
+  ```text
+  Switch#debug ip dhcp relay packet
+  ```
+  
+### 3.2 ip dhcp relay information option
+
+- 命令：`ip dhcp relay information option no ip dhcp relay information option`
+- 功能：设置本命令启用交换机中继代理的 option82 功能，本命令的 no 操作关闭交换机中继代理的 option82 功能
+- 参数：无
+- 缺省情况：系统默认关闭 option82 功能
+- 命令模式：全局配置模式
+- 使用指南：只有配置本命令 DHCP 中继代理才能在 DHCP 请求报文中添加 option82 选项交给服务器处理。启用本功能之前确保系统已经使能 DHCP 服务并配置转发目的端口67的 udp 广播报文
+- 举例：开启交换机中继代理的 option82 功能
+
+  ```text
+  Switch(config)#service dhcp 
+  Switch(config)#ip forward-protocol udp bootps 
+  Switch(config)#ip dhcp relay information option
+  ```
+  
+### 3.3 ip dhcp relay information option delimiter
+
+- 命令：`ip dhcp relay information option delimiter [colon | dot | slash | space] no ip dhcp relay information option delimiter`
+- 功能：该命令用来配置用户在全局定义的用来生成 option82 子选项的各参数的分隔符，该命令的 no 形式恢复分隔符为默认值，即 slash
+- 参数：无
+- 缺省情况：系统默认分隔符为 slash (“/”)。
+- 命令模式：全局配置模式
+- 使用指南：当用户在全局自定义了用来生成 option82 子选项（remote-id，circuit-id）的各参数后，该命令配置的分隔符用来分隔这些参数。
+- 举例：配置 option82 子选项各参数分隔符为dot（“.”）。
+
+  ```text
+  Switch(config)#ip dhcp relay information option delimiter dot
+  ```
+  
+### 3.4 ip dhcp relay information option remote-id
+
+- 命令：`ip dhcp relay information option remote-id {standard | <remote-id>} no ip dhcp relay information option remote-id`
+- 功能：本命令用于设置从接口接收的 DHCP 请求报文添加 option 82 子选项2(远程ID选项)的具体内容。本命令的 no 操作把添加 option 82子选项2(远程ID选项)的形式设置为 standard
+- 参数：standard 表示默认的交换机 VLAN MAC 格式，`<remote-id>`为用户自己指定的 option 82 的 remote-id 内容，它是一个长度小于等于64的字符串
+- 命令模式：全局配置模式
+- 缺省情况：系统默认使用 standard 形式设置 option 82 中的 remote-id
+- 使用指南：因为交换机添加的 option 82 信息要配合第三方的 DHCP 服务器使用，在交换机的标准 remote-id 形式不能满足服务器的要求时，提供一种手段由用户依据服务器情况自己指定 remote-id 的内容
+- 举例：设置 DHCP option82 选项的子选项 remote-id 为 street-1-1。
+
+  ```text
+  Switch(config)# ip dhcp relay information option remote-id street-1-1
+  ```
+  
+### 3.5 ip dhcp relay information option remote-id format
+
+- 命令：`ip dhcp relay information option remote-id format {default | vs-hp}`
+- 功能：本命令设置交换机中继代理的 option82 功能 remote-id 默认格式
+- 参数：default 表示 remote-id 为十六进制格式的交换机 VLAN MAC 地址，vs-hp 表示 remote-id 兼容设备厂商HP的 remote-id 格式
+- 缺省情况：系统默认 option82 功能 remote-id 格式为 default
+- 命令模式：全局配置模式
+- 使用指南：默认 remote-id 格式定义如下：
+          ![1.jpg](./img/07/1.jpg)
+          其中MAC为交换机VLAN MAC地址。
+          兼容设备厂商HP的remote-id格式定义如下：
+          ![2.jpg](./img/07/2.jpg)
+          其中IP为DHCP报文来自三层接口的主IP地址。
+- 举例：配置交换机中继代理 option82 功能 remote-id 为兼容设备厂商HP格式。
+
+  ```text
+  Switch(config)#ip dhcp relay information option remote-id format vs-hp
+  ```
+  
+### 3.6 ip dhcp relay information option self-defined remote-id
+
+- 命令：`ip dhcp relay information option self-defined remote-id {hostname | mac | string WORD} no ip dhcp relay information option self-defined remote-id`
+- 功能：该命令用来配置 option82 的生成方式，用户可以自定义用来生成 option82 子选项 remote-id 的参数（集）
+- 参数： WORD 自定义的 remote-id 字符串，最大长度为64。缺省情况：缺省采用标准生成方式
+- 命令模式：全局配置模式
+- 使用指南：配置本命令后，若用户没有在接口上配置 remote-id，则根据本命令的自定义生成方式来生成 option82 子选项 remote-id。对于 mac，如果是用 ascii 的形式填到报文中则采用形如 00-02-d1-2e-3a-0d 的形式。对于 mac，如果是用 ascii 的形式填到报文中则采用形如 00-02-d1-2e-3a-0d 的形式，如果是 hex 形式则占6个字节。各个选项按照命令配置的顺序填入报文，中间用分隔符分隔（分隔符为 ip dhcp relay information option delimiter 配置）
+- 举例：配置 option82 子选项 remote-id 的生成方式为 hostname 和字符串“abc”。
+
+  ```text
+  Switch(config)#ip dhcp relay information option self-defined remote-id hostname string abc
+  ```
+  
+### 3.7 ip dhcp relay information option self-defined remote-id format
+
+- 命令：`ip dhcp relay information option self-defined remote-id format [ascii | hex]`
+- 功能：该命令用来配置 relay option82 中 remote-id 的生成格式
+- 参数：无。
+- 缺省情况：系统默认生成格式为 ascii
+- 命令模式：全局配置模式使用指南：本命令的生成格式指定了用命令 ip dhcp relay information option type self-defined remote-id 生成 remote-id 的格式。
+- 举例：配置 relay option82 中 remote-id 的生成格式为hex。
+
+  ```text
+  Switch(config)# ip dhcp relay information option self-defined remote-id format hex
+  ```
+  
+### 3.8 ip dhcp relay information option self-defined subscriber-id
+
+- 命令：`ip dhcp relay information option self-defined subscriber-id {vlan | port | id (switch-id (mac | hostname)| remote-mac)| string WORD } no ip dhcp relay information option self-defined subscriber-id`
+- 功能：该命令用来配置 option82 的生成方式，用户可以自定义用来生成 option82 子选项 circuit-id 的参数（集）。参数：WORD 自定义的 circuit-id 字符串，最大长度为64
+- 缺省情况：缺省采用标准生成方式
+- 命令模式：全局配置模式
+- 使用指南：配置本命令后，若用户没有在接口上配置 circuit-id，则根据本命令的自定义生成方式来生成 option82 子选项 circuit-id。用该命令生成的 circuit-id 的格式为：若 self-defined format为ascii，则填入的 vlan 选项形如“Vlan2”，port选项形如“Ethernet1/0/1”，mac 选项和 remote-mac 选项形如 “00-02-d1-2e-3a-0d” ；若 self-defined format 为 hex ，则填入的 vlan 选项占两个字节，port 选项占4个字节，一个字节表示slot（对于机架式交换机，表示插槽号；对于盒式交换机，为1），一个字节表示 Module（默认为0），两个字节表示端口号，从1开始，mac 选项和 remote-mac 选项占6个字节。各个选项按照命令配置的顺序填入报文，中间用分隔符分隔（分隔符为ip dhcp relay information option delimiter配置）
+- 举例：配置生成 option82 子选项 circuit-id 的生成方式为 port，mac。
+
+  ```text
+  Switch(config)# ip dhcp relay information option self-defined subscriber-id port id switch-id mac
+  ```
+  
+### 3.9 ip dhcp relay information option self-defined subscriber-id format
+
+- 命令：`ip dhcp relay information option self-defined subscriber-id format [ascii | hex]`
+- 功能：该命令用来配置 relay option82中circuit-id 的生成格式
+- 参数：无
+- 缺省情况：系统默认生成格式为 ascii
+- 命令模式：全局配置模式使用指南：本命令的生成格式指定了用命令 ip dhcp relay information option type self-defined subscriber-id 生成 circuit-id 的格式
+- 举例：配置 relay option82中circuit-id 的生成格式为 hex。
+
+  ```text
+  Switch(config)# ip dhcp relay information option self-defined subscriber-id format hex
+  ```
+  
+### 3.10 ip dhcp relay information option subscriber-id
+
+- 命令：`ip dhcp relay information option subscriber-id {standard | <circuit-id>} no ip dhcp relay information option subscriber-id`
+- 功能：本命令用于设置从接口接收的 DHCP 请求报文添加 option 82 子选项1(电路ID选项)的形式，standard 表示标准的 vlan 名加物理端口名形式，如“Vlan2+Ethernet1/0/12”，`<circuit-id>`为用户自己指定的 option 82 的 circuit-id 内容，它是一个长度小于64的字符串。本命令的 no 操作把添加 option 82 子选项1(电路ID选项)的形式设置为 standard 形式
+- 参数：无
+- 命令模式：接口配置模式
+- 缺省情况：系统默认使用 standard 形式设置 option 82 中的 circuit-id
+- 使用指南：因为交换机添加的 option 82 信息要配合第三方的 DHCP 服务器使用，在交换机的标准 circuit-id 形式不能满足服务器的要求时，提供一种手段由用户依据服务器情况自己指定 circuit-id 的内容
+- 举例：设置 DHCP option82 选项的子选项 circuit-id为foobar 
+
+  ```text
+  Switch(config-if-vlan1)#ip dhcp relay information option subscriber-id foobar
+  ```
+  
+### 3.11 ip dhcp relay information option subscriber-id format
+
+- 命令：`ip dhcp relay information option subscriber-id format {hex | acsii | vs-hp}`
+- 功能：本命令设置交换机中继代理的option82功能subscriber-id默认格式
+- 参数：hex表示subscriber-id为十六进制格式的VLAN和端口信息，acsii表示subscriber-id为ACSII格式的VLAN和端口信息，vs-hp表示subscriber-id兼容设备厂商HP的格式
+- 缺省情况：系统默认option82功能subscriber-id格式为acsii
+- 命令模式：全局配置模式
+- 使用指南：ASCII格式的VLAN和端口信息形如“Vlan1+Ethernet1/0/11”。十六进制格式的
+          VLAN和端口信息定义如下：
+          ![3.jpg](./img/07/3.jpg)
+          其中，VLAN字段填写交换机VLAN ID。Slot对于机架式交换机，表示插槽号；对于盒式交换机，为1。Module默认为0。Port表示端口号，从1开始。
+          兼容设备厂商HP的subscriber-id格式定义如下：
+          ![4.jpg](./img/07/4.jpg)
+          其中Port表示端口号，从1开始
+- 举例：配置交换机中继代理option82功能subscriber-id格式为十六进制格式
+
+  ```text
+  Switch(config)#ip dhcp relay information option subscriber-id format hex
+  ```
+  
+### 3.12 ip dhcp relay information policy
+
+- 命令：`ip dhcp relay information policy {drop | keep | replace} no ip dhcp relay information policy`
+- 功能：本命令用于设置系统对于接收到的含有 option82 选项的 DHCP 请求报文的重转发策略，其中 drop 模式表示如果报文中含有 option82 选项，则系统丢弃该 DHCP 报文不作处理；keep 模式表示系统保持现有报文中的 option82 选项不变转发给服务器处理；replace 模式表示系统使用自己的 option82 选项替换现有报文中的 option82 选项，然后转发给服务器处理。本命令的no操作设置 option82 选项DHCP报文的重转发策略为 replace
+- 参数：无
+- 命令模式：接口配置模式
+- 缺省情况：系统默认使用 replace 模式使用本系统的 option82 选项替换现有报文中的 option 选项。使用指南：由于 DHCP 客户端报文向 DHCP 服务器传递的过程中可能经过多个 DHCP 中继代理，该路径上后续中继需要设置策略决定如何对先前中继添加的 option82 选项进行处理。Option 82 重转发策略的选择要配合 DHCP 服务器的配置策略而定
+- 举例：设置 DHCP 报文 option82 选项的重转发策略为 keep
+ 
+  ```text
+  Switch(config-if-vlan1)#ip dhcp relay information policy keep
+  ``` 
+  
+### 3.13 ip dhcp server relay information enable
+
+- 命令：`ip dhcp server relay information enable no ip dhcp server relay information enable`
+- 功能：本命令用于设置交换机 DHCP 服务器支持对 option82 选项的识别。本命令的 no 操作使服务器忽略处理 option 82 选项
+- 参数：无
+- 命令模式：全局配置模式
+- 缺省情况：系统默认不启用 option82 选项识别功能
+- 使用指南：如果希望交换机 DHCP 服务器识别 option82 选项并在应答报文中返回 option 82 信息，需要配置本命令，否则交换机 DHCP 服务器会忽视 option82 选项的存在
+- 举例：设置 DHCP 服务器支持 option82 选项
+
+  ```text
+  Switch(config)# ip dhcp server relay information enable
+  ```
+  
+### 3.14 show ip dhcp relay information option
+
+- 命令：`show ip dhcp relay information option`
+- 功能：本命令显示系统DHCP option 82的状态信息，包括option82使能开关，接口重转发策略，接口电路ID模式，以及交换机DHCP服务器option82使能开关
+- 参数：无
+- 命令模式：特权和全局配置模式
+- 使用指南：运行时使用本命令检查中继代理option82状态信息。
+- 举例：
+
+  ```text
+  Switch#show ip dhcp relay information option 
+  ip dhcp server relay information option(i.e. option 82) is disabled 
+  ip dhcp relay information option(i.e. option 82) is enabled
+   
+  Vlan2: 
+        ip dhcp relay information policy keep 
+        ip dhcp relay information option subscriber-id standard 
+  Vlan3: 
+        ip dhcp relay information policy replace 
+        ip dhcp relay information option subscriber-id foobar
+  ```
+  
+## 第4章 DHCP option 60和option 43命令
+
+### 4.1 option 43 ascii LINE
+
+- 命令：`option 43 ascii LINE no option 43`
+- 功能：在 ip dhcp pool 模式下以 ascii 格式配置 option 43 字符串。本命令的 no 操作为删除配置的 option 43
+- 参数：LINE：以 ascii 格式配置的 option 43 字符串，字符串长度范围为 1-255
+- 缺省情况：默认没有配置 option 43 字符串
+- 命令模式：ip dhcp pool 模式
+- 使用指南：无
+- 举例：以 ascii 格式配置 option 43 为"AP 1000"
+
+  ```text
+  switch(config)#ip dhcp pool a 
+  switch (dhcp-a-config)#option 43 ascii AP 1000
+  ```
+  
+### 4.2 option 43 hex WORD
+
+- 命令：`option 43 hex WORD no option 43`
+- 功能：在 ip dhcp pool 模式下以 hex 格式配置 option 43 字符串。本命令的 no 操作为删除配置的 option 43
+- 参数：WORD：以 hex 格式配置的 option 43字符串，如 a1241b
+- 缺省情况：默认没有配置 option 43
+- 命令模式：ip dhcp pool 模式
+- 使用指南：当使用 hex 方式配置 option 43 时，字符串需要按照 TLV（Type-Length-Value）的格式填写。比如通过 option 43 下发 ip 地址10.1.1.1，则此处的 hex 字符串应该为 01040A010101，其中 Type=0x01，表示 IP 地址；Length=0x04，即 IP 地址的长度为4字节；Value=0x0A010101，即10.1.1.1的十六进制格式
+- 举例：以 hex 格式配置 option 43 为"01040a010101"
+
+  ```text
+  switch(config)#ip dhcp pool a 
+  switch (dhcp-a-config)#option 43 hex 01040a010101
+  ```
+  
+### 4.3 option 43 ip A.B.C.D
+
+- 命令：`option 43 ip A.B.C.D no option 43`
+- 功能：在 ip dhcp pool 模式下以IP格式配置 option 43 字符串。本命令的 no 操作为删除配置的 option 43
+- 参数：A.B.C.D：以IP格式配置的 option 43，如 192.168.1.1
+- 缺省情况：默认没有配置 option 43。
+- 命令模式：ip dhcp pool 模式
+- 使用指南：用该命令配置形如"192.168.1.1"的 option 43，则填入报文中的 option 43 为"C0A80101"。
+- 举例：以IP格式配置 option 43 为"192.168.1.1"。
+
+  ```text
+  switch(config)#ip dhcp pool a 
+  switch (dhcp-a-config)#option 43 ip 192.168.1.1
+  ```
+  
+### 4.4 option 60 ascii LINE
+
+- 命令：`option 60 ascii LINE no option 60`
+- 功能：在 ip dhcp pool 模式下以 ascii 格式配置 option 60 字符串。本命令的 no 操作为删除配置的 option 60
+- 参数：LINE：以 ascii 格式配置的 option 60 字符串，字符串长度范围为1-255
+- 缺省情况：默认没有配置 option 60 字符串
+- 命令模式：ip dhcp pool 模式
+- 使用指南：无
+- 举例：以 ascii 格式配置 option 60 为"AP 1000"。
+
+  ```text
+  switch(config)#ip dhcp pool a 
+  switch (dhcp-a-config)#option 60 ascii AP 1000
+  ```
+  
+### 4.5 option 60 hex WORD
+
+- 命令：`option 60 hex WORD no option 60`
+- 功能：在 ip dhcp pool 模式下以 hex 格式配置 option 60 字符串。本命令的 no 操作为删除配置的 option 60
+- 参数：WORD：以 hex 格式配置的 option 60 字符串，如a1241b
+- 缺省情况：默认没有配置 option 60
+- 命令模式：ip dhcp pool 模式
+- 使用指南：无。
+- 举例：以 hex 格式配置 option 60 为"41502031303030"。
+
+  ```text
+  switch(config)#ip dhcp pool a 
+  switch(dhcp-a-config)#option 60 hex 41502031303030
+  ```
+  
+### 4.6 option 60 ip A.B.C.D
+
+- 命令：`option 60 ip A.B.C.D no option 60`
+- 功能：在 ip dhcp pool 模式下以IP格式配置 option 60 字符串。本命令的 no 操作为删除配置的 option 60
+- 参数：A.B.C.D：以IP格式配置的 option 60，如192.168.1.1
+- 缺省情况：默认没有配置 option 60。
+- 命令模式：ip dhcp pool 模式
+- 使用指南：用该命令配置形如"192.168.1.1"的 option 60，则匹配报文中的 option 60 为"C0A80101"。
+- 举例：以IP格式配置 option 60 为"192.168.1.1"。
+
+  ```text
+  switch(config)#ip dhcp pool a 
+  switch (dhcp-a-config)#option 60 ip 192.168.1.1
+  ```
+
+## 第5章 DHCPv6 option37，38配置命令
+
+### 5.1.1 address range
+
+- 命令：`address range <start-ip> <end-ip> no address range <start-ip> <end-ip>`
+- 功能：本命令在 DHCPv6 地址池配置模式下用来为 DHCPv6 服务器地址池中的一个 DHCPv6 class 设置一个地址范围，no 命令用来移除这个地址范围。不支持 prefix/plen 形式
+- 参数：
+     + start-ip：定义地址池中地址范围的起始地址
+     + end-ip：定义地址池中地址范围的结束地址
+- 缺省情况：无
+- 命令模式：DHCPv6 地址池 class 配置模式使用指南：使用该命令为 class 分配的地址范围应做地址检查，保证分配到的地址范围不超出所在地址池的地址范围。一个 class 仅分配一段地址范围，在同一地址池中的多个 class 所分配的地址范围是可以有重叠的。如果不用该命令为一个 DHCPv6 class 在DHCPv6服务器地址池中分配地址范围，那么默认这个 class 的地址范围是地址池中的整个子网
+- 举例：将名为 CLASS1 的 DHCPv6 class 关联到 dhcpv6 pool 1 中，为 CLASS1 分配地址范围为 2001:da8:100:1::2 到2001:da8:100:1::30
+
+  ```text
+  Switch(Config)#ipv6 dhcp pool 1
+  Switch(dhcp-1-config)#class CLASS1
+  Switch(dhcp-1-class-CLASS1-config)#address   range   2001:da8:100:1::2 2001:da8:100:1::30
+  ```
+  
+### 5.1.2 class
+
+- 命令：`class <class-name> no class <class-name>`
+- 功能：本命令在DHCPv6地址池配置模式下将 class 关联到地址池中，并进入地址池中 class 的配置模式，用 no 命令删除这种关联
+- 参数：class-name：DHCPv6 class的名字
+- 缺省情况：无
+- 命令模式：DHCPv6 地址池配置模式使用指南：应该首先用 IPv6 DHCP Class 全局配置命令定义好这个 class。如果用 class 命令输入了一个尚不存在的 class 名，那么将不创建该 class
+- 举例：将名为 CLASS1 的 DHCPv6 class 关联到 dhcpv6 pool 1 中
+
+  ```text
+  Switch(Config)#ipv6 dhcp pool 1 
+  Switch(dhcp-1-config)#class CLASS1
+  ```
+  
+### 5.1.3 ipv6 dhcp class
+
+- 命令：`ipv6 dhcp class <class-name> no ipv6 dhcp class <class-name>`
+- 功能：本命令用于定义一个 DHCPv6 class 并进入 DHCPv6 class 配置模式，no 命令用于删除这个 DHCPv6 class
+- 参数：class-name：DHCPv6 class 的名字，它是一个长度小于32的字符串
+- 缺省情况：无
+- 命令模式：全局配置模式
+- 使用指南：在一个 DHCPv6 class 中可以配置一组 option 37 或者 option 38 选项内容，或者同时配置 option 37 和 option 38 选项内容。该命令当服务器端支持 DHCPv6 class 的时候才能使用
+- 举例：定义一个名为 CLASS1 的 DHCPv6 class。
+
+  ```text
+  witch(Config)# ipv6 dhcp class CLASS1
+  ```
+
+### 5.1.4 ipv6 dhcp relay remote-id
+
+- 命令：`ipv6 dhcp relay remote-id <remote-id> no ipv6 dhcp relay remote-id`
+- 功能：
+  本命令用于设置从接口接收的 DHCPv6 请求报文添加 option 37 选项的形式，`<remote-id>` 为用户自定义的 option 37 的 remote-id 内容，它是一个长度小于 128 的字符串。
+  本命令的no操作恢复 option 37 的 remote-id 选项的形式为默认的 enterprise-number 和 vlan MAC 地址
+- 参数：remote-id：用户自定义的 option 37 的内容
+- 缺省情况：系统默认使用 vlan MAC 地址作为 remote-id 的内容，vlan MAC 形式如 “00-01-ac-12-23”，中间的连字符为 ‘-’
+- 命令模式：接口配置模式使用指南：因为交换机添加的 option 37 信息有可能配合第三方的 DHCPv6 服务器使用，在交换机的默认 remote-id 形式不能满足服务器的要求时，提供一种手段由用户依据服务器情况自己指定 remote-id 的内容。系统默认使用 enterprise-number 和 vlan MAC 地址作为 remote-id 的内容
+- 举例：设置 DHCPv6 option 37 选项的 remote-id为abc
+
+  ```text
+  Switch(Config-if-vlan1)# ipv6 dhcp relay remote-id abc
+  ```
+  
+### 5.1.5 ipv6 dhcp relay remote-id option
+
+- 命令：`ipv6 dhcp relay remote-id option no ipv6 dhcp relay remote-id option`
+- 功能：设置本命令允许交换机中继支持 option 37 选项功能，本命令的 no 操作关闭交换机中继的 option 37 选项功能
+- 参数：无
+- 缺省情况：系统默认关闭交换机中继的 option 37 选项功能。
+- 命令模式：全局配置模式
+- 使用指南：只有配置本命令 DHCPv6 中继代理才能在 DHCPv6 请求报文中添加 option 37 选项交给服务器或下一级中继代理处理。执行本命令之前确保系统已经使能 DHCPv6 服务
+- 举例：开启交换机中继支持 option 37 选项功能。
+
+  ```text
+  Switch(Config)#service dhcpv6 
+  Switch(Config)#ipv6 dhcp relay remote-id option
+  ```
+  
+### 5.1.6 ipv6 dhcp relay subscriber-id
+
+- 命令：`ipv6 dhcp relay subscriber-id <subscriber-id> no ipv6 dhcp relay subscriber-id`
+- 功能：本命令用于设置从接口接收的 DHCPv6 请求报文添加 option 38 选项的形式，`<subscriber-id>` 为用户自定义的 option 38 的 subscriber-id 内容，它是一个长度小于 128 的字符串。本命令的 no 操作恢复 option 38 的 subscriber-id 选项的形式为默认的VLAN名加物理端口名形式，如 “Vlan2+Ethernet1/0/2”
+- 参数：subscriber-id：用户自定义的 option 38 的内容
+- 缺省情况：系统默认使用 VLAN 名加物理端口名形式的形式设置 option 38 中的 subscriber-id
+- 命令模式：接口配置模式
+- 使用指南：因为交换机添加的 option 38 信息有可能配合第三方的 DHCPv6 服务器使用，在交换机的标准 subscriber-id 形式不能满足服务器的要求时，提供一种手段由用户依据服务器情况自己指定 subscriber-id 的内容。系统默认使用VLAN名加物理端口名形式的形式设置 option 38 中的 subscriber-id
+- 举例：设置 DHCPv6 option 38 选项的 subscriber-id 为 abc
+
+  ```text
+  Switch(Config-if-vlan1)# ipv6 dhcp relay subscriber-id abc
+  ```
+  
+### 5.1.7 ipv6 dhcp relay subscriber-id option
+
+- 命令：`ipv6 dhcp relay subscriber-id option no ipv6 dhcp relay subscriber-id optio`
+- 功能：设置本命令允许交换机中继支持 option 38 选项功能，本命令的 no 操作关闭交换机中继的 option 38 选项功能
+- 参数：无
+- 缺省情况：系统默认关闭交换机中继的 option 38选项功能
+- 命令模式：全局配置模式使用指南：只有配置本命令 DHCPv6 中继代理才能在 DHCPv6 请求报文中添加 option 38 选项交给服务器或下一级中继代理处理。执行本命令之前确保系统已经使能 DHCPv6 服务。系统默认关闭交换机中继的 option 38 选项功能
+- 举例：开启交换机中继支持 option 38 选项功能
+
+  ```text
+  Switch(Config)#service dhcpv6
+  Switch(Config)#ipv6 dhcp relay subscriber-id option
+  ```
+  
+### 5.1.8 ipv6 dhcp relay subscriber-id select delimiter
+
+- 命令：`ipv6 dhcp relay subscriber-id select (sp | sv | pv | spv) delimiter WORD (delimiter WORD | ) no ipv6 dhcp relay subscriber-id select delimiter`
+- 功能：配置用户配置选项来生成 subscriber-id，no 命令恢复为最初的默认配置即 VLAN 名加端口名的形式
+- 参数：(sp | sv | pv | spv)：此选项是对 slot，port，vlan 的组合形式的选择，sp 代表 slot 和 port，sv 代表 slot 和 vlan，pv 代表 port 和 vlan，spv 代表 slot、port 和 vlan。WORD：slot，port，vlan 分隔符，取值范围是(#|.|,|;|:|/|space)，注意，这里有两个 delimiter WORD，第一个是 slot 和 port 间的分隔符，第二个是 port 和 vlan 间的分隔符
+- 缺省情况：默认此配置为空
+- 命令模式：全局配置模式
+- 使用指南：该命令对已经自定义 subscriber-id 的端口不起作用，如果配置该命令后，用户又自定义端口的 subscriber-id，则以用户自定义为准。默认此配置为空
+- 举例： 
+
+  ```text
+  Swithch(config)# ipv6 dhcp relay subscriber-id select sp delimiter 
+  ```
+  
+### 5.1.9 ipv6 dhcp server remote-id option
+
+- 命令：`ipv6 dhcp server remote-id option no ipv6 dhcp server remote-id option`
+- 功能：本命令用于设置 DHCPv6 服务器支持对 option 37 选项的识别。本命令的 no 操作使系统不支持 option 37 选项
+- 参数：无
+- 缺省情况：系统默认不支持 option 37 选项功能
+- 命令模式：全局配置模式
+- 使用指南：如果希望交换机 DHCPv6 服务器识别 option 37 选项并做处理，需要配置本命令，否则交换机 DHCPv6 服务器会忽视 option 37 选项的存在。系统默认不支持 option 37 选项功能
+- 举例：设置 DHCPv6 服务器支持 option 37 选项。
+
+  ```text
+  Switch(Config)# ipv6 dhcp server remote-id option
+  ```
+  
+### 5.1.10 ipv6 dhcp server select relay-forw
+
+- 命令：`ipv6 dhcp server select relay-forw no ipv6 dhcp server select relay-forw`
+- 功能：本命令用于设置 DHCPv6 服务器支持对报文中存在多个 option 37 选项或者 option38 选项时对其进行选择，选择最里层 relay-forw 中的 option 37 选项和 option38 选项。本命令的no操作恢复默认设置，即选择原始报文中的 option 37 选项和 option38 选项
+- 参数：无
+- 缺省情况：系统默认选择原始报文中的 option 37 选项和 option38 选项。
+- 命令模式：接口配置模式
+- 使用指南：使用该命令前确定服务器端已开启对 option 37 选项和 option38 选项的支持。系统默认选择原始报文中的 option 37 选项和 option38 选
+- 举例：设置 DHCPv6 服务器 vlan1 接口选择最里层 relay-forw 中的 option 37 和 option38 选项选项
+
+  ```text
+  Switch(Config-if-vlan1)# ipv6 dhcp server select relay-forw
+  ```
+  
+### 5.1.11 ipv6 dhcp server subscriber-id option
+
+- 命令：`ipv6 dhcp server subscriber-id option no ipv6 dhcp server subscriber-id option`
+- 功能：本命令用于设置 DHCPv6 服务器支持对 option 38 选项的识别。本命令的 no 操作使系统不支持 option 38 选项
+- 参数：无
+- 缺省情况：系统默认不支持 option 38 选项功能
+- 命令模式：全局配置模式使用指南：如果希望交换机 DHCPv6 服务器识别 option 38 选项并做处理，需要配置本命令，否则交换机 DHCPv6 服务器会忽视 option 38 选项的存在。系统默认不支持 option 38 选项功能
+- 举例：设置 DHCPv6 服务器支持 option 38 选项
+
+  ```text
+  Switch(Config)# ipv6 dhcp server subscriber-id option
+  ```
+  
+### 5.1.12 ipv6 dhcp snooping information option remote-id format
+
+- 命令：`ipv6 dhcp snooping information option remote-id format {hex | acsii }`
+- 功能：本命令设置交换机中继代理的 DHCPV6 option37 功能 remote-id 格式
+- 参数：hex 表示 remote-id 为十六进制格式的交换机 VLAN MAC 地址，acsii 表示 remote-id 为为 ACSII 格式的交换机 VLAN MAC 地址
+- 缺省情况：系统默认 option37 功能 remote-id 格式为 acsii
+- 命令模式：全局配置模式使用指南：十六进制的 remote-id 格式定义如下：
+  ![5.jpg](./img/07/5.jpg)
+  其中MAC为交换机 VLAN MAC 地址。
+- 举例：配置交换机 DHCP snooping option37 功能 remote-id 为默认格式
+
+  ```text
+  Switch(config)#ipv6 dhcp snooping information option remote-id format acsii
+  ```
+  
+### 5.1.13 ipv6 dhcp snooping information option subscriber-id format
+
+- 命令：`ipv6 dhcp snooping information option subscriber-id format {hex | acsii }`
+- 功能：本命令设置 DHCPv6 snooping option38 功能 subscriber-id 默认格式
+- 参数：hex 表示 subscriber-id 为十六进制格式的 VLAN 和端口信息，acsii 表示 subscriber-id 为 ACSII 格式的 VLAN 和端口信息
+- 缺省情况：系统默认 option38 功能 subscriber-id 格式为 acsii
+- 命令模式：全局配置模式
+- 使用指南：ASCII 格式的VLAN和端口信息形如 Vlan1+Ethernet1/0/11。十六进制格式的 VLAN 和端口信息定义如下
+          的 VLAN 和端口信息定义如下：
+          ！[6.jpg](./img/6.jpg)
+          其中，VLAN 字段填写交换机 VLAN ID。Slot 对于机架式交换机，表示插槽号；对于盒式交换机，为1。Module 默认为0。Port 表示端口号，从1开始
+- 举例：配置交换机 DHCP snooping option38 功能 subscriber-id 格式为十六进制格式。
+
+  ```text
+  Switch(config)#ipv6 dhcp snooping information option subscriber-id format hex
+  ```
+  
+### 5.1.14 ipv6 dhcp snooping remote-id
+
+命令：`ipv6 dhcp snooping remote-id <remote-id> no ipv6 dhcp snooping remote-id`
+功能：本命令用于设置在接收的DHCPv6请求报文中添加 option 37 选项的形式，`<remote-id>`为用户自定义的 option 37 中 remote-id 的内容，它是一个长度小于128的字符串。本命令的 no 操作恢复 option 37 中 remote-id 的内容为默认的 enterprise-number 和 vlan MAC 地址
+参数：remote-id：用户自定义的 option 37 的内容
+缺省情况：系统默认使用 vlan MAC 地址作为 remote-id 的内容，vlan MAC 形式如“00-01-ac-12-23”，中间的连字符为‘-’
+命令模式：端口配置模式
+使用指南：因为交换机添加的 option 37 信息有可能配合第三方的 DHCPv6 服务器使用，在交换机的标准 remote-id 形式不能满足服务器的要求时，提供一种手段由用户依据服务器情况自己指定 remote-id 的内容。系统默认使用 enterprise-number 和 vlan MAC 地址作为 remote-id 的内容
+举例：设置 DHCPv6 option 37 选项的 remote-id为abc。
+
+  ```text
+  Switch(Config-if-Ethernet1/0/1)#ipv6 dhcp snooping remote-id abc
+  ```
+
+### 5.1.15 ipv6 dhcp snooping remote-id option
+
+- 命令：`ipv6 dhcp snooping remote-id option no ipv6 dhcp snooping remote-id option`
+- 功能：设置本命令允许 DHCPv6 SNOOPING 支持 option 37 选项功能，本命令的 no 操作关闭 DHCPv6 SNOOPING 的 option 37 选项功能
+- 参数：无
+- 缺省情况：系统默认关闭 DHCPv6 SNOOPING 中的 option 37 选项功能
+- 命令模式：全局配置模式
+- 使用指南：只有配置本命令 DHCPv6 SNOOPING 才能在 DHCPv6 报文中添加 option 37 选项交给中继代理或服务器。执行本命令之前确保系统已经使能 DHCPv6 SNOOPING。系统默认关闭 DHCPv6 SNOOPING 中的 option 37 选项功能
+- 举例：开启 DHCPv6 SNOOPING 的 option 37 选项功能
+
+  ```text
+  Switch(Config)#ipv6 dhcp snooping enable
+  Switch(Config)#ipv6 dhcp snooping remote-id option
+  ```
+  
+### 5.1.16 ipv6 dhcp snooping remote-id policy
+
+- 命令：`ipv6 dhcp snooping remote-id policy {drop | keep | replace} no ipv6 dhcp snooping remote-id policy`
+- 功能：本命令用于设置系统对于接收到的含有 option 37 选项的 DHCPv6 报文的重转发策略，其中drop模式表示如果报文中含有 option 37 选项，则系统丢弃该 DHCPv6 报文不作处理；keep 模式表示系统保持现有报文中的 option 37 选项不变转发给服务器处理；replace模式表示系统使用自己的 option 37 选项替换现有报文中的 option 37 选项，然后转发给服务器处理。本命令的no操作设置 option 37 选项 DHCPv6 报文的重转发策略为 replace
+- 参数：无
+- 缺省情况：系统默认使用 replace 模式使用本系统的 option 37 选项替换现有报文中的 option 选项
+- 命令模式：全局配置模式使用指南：由于 DHCPv6 客户端报文可能已经含有 option 37 选项信息，所以须制定 DHCPv6 SNOOPING 对该信息的处理策略。如果重转发策略设置为 replace，系统预先必须开启 option 37 选项功能。系统默认使用 replace 模式使用本系统的 option 37 选项替换现有报文中的 option 选项
+- 举例：设置 DHCPv6 SNOOPING 对 DHCPv6 报文的 ption 37 选项的重转发策略为 keep
+
+  ```text
+  Switch(Config)# ipv6 dhcp snooping remote-id policy keep
+  ```
+  
+### 5.1.17 ipv6 dhcp snooping subscriber-id
+
+- 命令：`ipv6 dhcp snooping subscriber-id <subscriber-id> no ipv6 dhcp snooping subscriber-id`
+- 功能：本命令用于设置在接收的 DHCPv6 请求报文中添加 option 38 选项的形式，`<subscriber-id>`为用户自定义的 option 38 中 subscriber-id 的内容，它是一个长度小于 128 的字符串。本命令的 no 操作恢复 option 38 中 subscriber-id 的内容为默认的 VLAN 名加物理端口名形式，如 “Vlan2+Ethernet1/0/2”
+- 参数：subscriber-id：用户自定义的 option 38 的内容
+- 缺省情况：系统默认使用 VLAN 名加物理端口名形式的形式设置 option 38 中的 subscriber-id
+- 命令模式：端口配置模式
+- 使用指南：因为交换机添加的 option 38 信息有可能配合第三方的 DHCPv6 服务器使用，在交换机的标准 subscriber-id 形式不能满足服务器的要求时，提供一种手段由用户依据服务器情况自己指定 subscriber-id 的内容。系统默认使用VLAN名加物理端口名形式的形式设置 option 38 中的 subscriber-id
+- 举例：设置 DHCPv6 option 38 选项的 subscriber-id 为 abc
+
+  ```text
+  Switch(Config-if-Ethernet1/0/1)#ipv6 dhcp snooping subscriber-id abc
+  ```
+  
+### 5.1.18 ipv6 dhcp snooping subscriber-id option
+
+- 命令：`ipv6 dhcp snooping subscriber-id option no ipv6 dhcp snooping subscriber-id option`
+- 功能：设置本命令允许 DHCPv6 SNOOPING 支持 option 38 选项功能，本命令的 no 操作关闭 DHCPv6 SNOOPING 的 option 38 选项功能
+- 参数：无
+- 缺省情况：系统默认关闭 DHCPv6 SNOOPING 中的 option 38 选项功能
+- 命令模式：全局配置模式
+- 使用指南：只有配置本命令 DHCPv6 SNOOPING 才能在 DHCPv6 报文中添加 option 38 选项交给中继代理或服务器。执行本命令之前确保系统已经使能 DHCPv6 SNOOPING。系统默认关闭 DHCPv6 SNOOPING 中的 option 38 选项功能
+- 举例：开启 DHCPv6 SNOOPING 的 option 38 选项功能
+
+  ```text
+  Switch(Config)#ipv6 dhcp snooping enable
+  Switch(Config)#ipv6 dhcp snooping subscriber-id option
+  ```
+  
+### 5.1.19 ipv6 dhcp snooping subscriber-id policy
+
+- 命令：`ipv6 dhcp snooping subscriber-id policy {drop | keep | replace} no ipv6 dhcp snooping subscriber-id policy`
+- 功能：本命令用于设置系统对于接收到的含有 option 38 选项的 DHCPv6 报文的重转发策略，其中 drop 模式表示如果报文中含有 option 38 选项，则系统丢弃该 DHCPv6 报文不作处理；keep 模式表示系统保持现有报文中的 option 38 选项不变转发给服务器处理；replace 模式表示系统使用自己的 option 38 选项替换现有报文中的 option 38 选项，然后转发给服务器处理。本命令的 no 操作设置 option 38 选项 DHCPv6 报文的重转发策略为 replace
+- 参数：无
+- 缺省情况：系统默认使用 replace 模式使用本系统的 option 38 选项替换现有报文中的 option 38 选项
+- 命令模式：全局配置模式
+- 使用指南：由于 DHCPv6 客户端报文可能已经含有 option 38 选项信息，所以须制定 DHCPv6SNOOPING 对该信息的处理策略。如果重转发策略设置为 replace，系统预先必须开启 option 38 选项功能。系统默认使用 replace 模式使用本系统的 option 38 选项替换现有报文中的 option 38 选项
+- 举例：设置 DHCPv6 SNOOPING 对 DHCPv6 报文的 option 38 选项的重转发策略为 keep
+
+  ```text
+  Switch(Config)# ipv6 dhcp snooping subscriber-id policy keep
+  ```
+  
+### 5.1.20 ipv6 dhcp snooping subscriber-id select delimiter
+
+- 命令：`ipv6 dhcp snooping subscriber-id select (sp | sv | pv | spv) delimiter WORD (delimiter WORD | ) no ipv6 dhcp snooping subscriber-id select delimiter`
+- 功能：配置用户配置选项来生成 subscriber-id，no 命令恢复为最初的默认配置即 VLAN 名加端口名的形式
+- 参数：(sp | sv | pv | spv)：此选项是对 slot，port，vlan 的组合形式的选择，sp 代表 slot 和 port，sv 代表 slot 和 vlan，pv 代表 port 和 vlan，spv 代表 slot、port 和 vlan。WORD：slot，port，vlan 分隔符，取值范围是(#|.|,|;|:|/|space)，注意，这里有两个 delimiter WORD，第一个是 slot 和 port 间的分隔符，第二个是 port 和 vlan 间的分隔符
+- 缺省情况：默认此配置为空
+- 命令模式：全局配置模式
+- 使用指南：该命令对已经自定义 subscriber-id 的端口不起作用，如果配置该命令后，用户又自定义端口的 subscriber-id，则以用户自定义为准。默认此配置为空
+- 举例：
+
+  ```text
+  Swithc(config)# ipv6 dhcp snooping subscriber-id select sv delimiter #
+  ```
+  
+### 5.1.21 ipv6 dhcp use class
+
+
+
+  
+
+
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+   
 
 
 
 
 
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
